@@ -80,7 +80,6 @@ impl SceneManager
     {
         for(key, light) in self.lights_.iter_mut()
         {
-            println!("{}", light.color_.x);
             let data_ptr : * mut c_void = light as * mut _ as * mut c_void;
             unsafe{self.uniform_buffers_[curr_frame as usize].copy_from_data(data_ptr, size_of::<LightUBO>(), size_of::<LightUBO>() as u64 * key)};
         }
@@ -88,7 +87,6 @@ impl SceneManager
 
     pub fn get_descriptor_buffer_info(&self) ->DescriptorBufferInfo
     {
-        println!("{}", self.lights_.len());
         DescriptorBufferInfo{
             buffer: self.uniform_buffers_[0].buffer_handle_,
             offset: 0,

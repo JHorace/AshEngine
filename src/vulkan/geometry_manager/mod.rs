@@ -93,7 +93,6 @@ impl GeometryManager
 
     pub unsafe fn load_geometry_to_device(& mut self, device: &ash::Device)
     {
-        println!("Loading");
         self.stage_vertices(device);
         self.stage_indices(device);
 
