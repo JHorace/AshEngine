@@ -1,6 +1,8 @@
 use std::ptr;
 use ash::version::DeviceV1_0;
 
+use cgmath::Matrix4;
+
 #[repr(C)]
 #[derive(Clone, Debug, Copy)]
 pub struct PipelineLayout
@@ -14,7 +16,7 @@ impl PipelineLayout{
         let push_constant_range = ash::vk::PushConstantRange{
             stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
             offset: 0,
-            size: std::mem::size_of::<u32>() as u32,
+            size: std::mem::size_of::<Matrix4<u32>>() as u32 * 2,
         };
 
         let layout_create_info = ash::vk::PipelineLayoutCreateInfo{
