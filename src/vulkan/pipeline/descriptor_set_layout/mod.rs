@@ -25,7 +25,7 @@ impl DescriptorSetLayout
     }
 }
 
-pub fn build_descriptor_set_layout_bindings() -> [ash::vk::DescriptorSetLayoutBinding; 3]
+pub fn build_descriptor_set_layout_bindings() -> [ash::vk::DescriptorSetLayoutBinding; 1]
 {
     [
         ash::vk::DescriptorSetLayoutBinding{
@@ -35,19 +35,5 @@ pub fn build_descriptor_set_layout_bindings() -> [ash::vk::DescriptorSetLayoutBi
             stage_flags: ash::vk::ShaderStageFlags::VERTEX,
             p_immutable_samplers: ptr::null(),
         },
-        ash::vk::DescriptorSetLayoutBinding{
-            binding: 1,
-            descriptor_type: ash::vk::DescriptorType::UNIFORM_BUFFER,
-            descriptor_count: 1,
-            stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
-            p_immutable_samplers: ptr::null(),
-        },
-        ash::vk::DescriptorSetLayoutBinding{
-            binding: 2,
-            descriptor_type: ash::vk::DescriptorType::UNIFORM_BUFFER,
-            descriptor_count: 1,
-            stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
-            p_immutable_samplers: ptr::null(),
-        }
     ]
 }
