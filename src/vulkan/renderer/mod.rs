@@ -477,10 +477,9 @@ impl Renderer
             device.cmd_push_constants(
                 command_buffer,
                 self.pipeline_.unwrap().layout_.layout_handle_,
-                ash::vk::ShaderStageFlags::FRAGMENT,
+                ash::vk::ShaderStageFlags::VERTEX,
                 0,
-                push_constant_vec.as_slice()
-                ,
+                push_constant_vec.as_slice(),
             );
 
             device.cmd_bind_pipeline(command_buffer, ash::vk::PipelineBindPoint::GRAPHICS, self.pipeline_.unwrap().pipeline_handle_);

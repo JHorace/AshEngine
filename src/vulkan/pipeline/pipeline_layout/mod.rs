@@ -13,11 +13,17 @@ pub struct PipelineLayout
 impl PipelineLayout{
     pub unsafe fn new(device: &ash::Device, descriptor_set_layout: &ash::vk::DescriptorSetLayout) -> PipelineLayout
     {
-        let push_constant_range = ash::vk::PushConstantRange{
+        let push_constant_ranges = [ash::vk::PushConstantRange{
             stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
             offset: 0,
-            size: std::mem::size_of::<Matrix4<u32>>() as u32 * 2,
-        };
+            size: std::mem::size_of::<Matrix4<u32>>() as u32,
+        },
+            ash::vk::PushConstantRange{
+                stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
+                offset: std::mem::size_of::<Matrix4<u32>>() as u32,
+                size: std::mem::size_of::<Matrix4<u32>>() as u32,
+            }];
+
 
         let layout_create_info = ash::vk::PipelineLayoutCreateInfo{
             s_type: ash::vk::StructureType::PIPELINE_LAYOUT_CREATE_INFO,
@@ -25,8 +31,8 @@ impl PipelineLayout{
             flags: ash::vk::PipelineLayoutCreateFlags::empty(),
             set_layout_count: 1,
             p_set_layouts: descriptor_set_layout,
-            push_constant_range_count: 1,
-            p_push_constant_ranges: &push_constant_range
+            push_constant_range_count: 2,
+            p_push_constant_ranges: push_constant_ranges.as_ptr()
         };
 
         let layout_handle = device.create_pipeline_layout(&layout_create_info, None).expect("Could not create pipeline layout");
