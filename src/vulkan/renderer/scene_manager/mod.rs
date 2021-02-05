@@ -81,7 +81,7 @@ impl SceneManager
         for(key, light) in self.lights_.iter_mut()
         {
             let data_ptr : * mut c_void = light as * mut _ as * mut c_void;
-            unsafe{self.uniform_buffers_[curr_frame as usize].copy_from_data(data_ptr, size_of::<LightUBO>(), size_of::<LightUBO>() as u64 * key)};
+            unsafe{self.uniform_buffers_[curr_frame as usize].copy_from_data(data_ptr, size_of::<LightUBO>() as u64, size_of::<LightUBO>() as u64 * key)};
         }
     }
 

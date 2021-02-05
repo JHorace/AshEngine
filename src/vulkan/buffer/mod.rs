@@ -59,9 +59,9 @@ impl Buffer{
     {
         device.unmap_memory(self.device_memory_handle_);
     }
-    pub unsafe fn copy_from_data(& mut self, data: * const c_void, size: usize, offset: ash::vk::DeviceSize)
+    pub unsafe fn copy_from_data(& mut self, data: * const c_void, size: u64, offset: ash::vk::DeviceSize)
     {
-        ptr::copy_nonoverlapping(data.offset(offset as isize), self.mapped_memory_, size);
+        ptr::copy_nonoverlapping(data.offset(offset as isize), self.mapped_memory_, size as usize);
     }
 
     pub unsafe fn copy_from_buffer(&mut self, device: &ash::Device, queue: ash::vk::Queue, command_buffer: ash::vk::CommandBuffer, src: &Buffer, copy_info: ash::vk::BufferCopy)

@@ -121,7 +121,7 @@ impl InstanceManager
             if instance.dirty_
             {
                 let data_ptr : * mut c_void = & mut instance.ubo_ as * mut _ as * mut c_void;
-                unsafe { self.uniform_buffers_[curr_frame as usize].copy_from_data(data_ptr, size_of::<UBO>(), size_of::<UBO>() as u64 * key) }
+                unsafe { self.uniform_buffers_[curr_frame as usize].copy_from_data(data_ptr, size_of::<UBO>() as u64, size_of::<UBO>() as u64 * key) }
             }
         }
     }

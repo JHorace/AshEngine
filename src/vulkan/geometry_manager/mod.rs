@@ -2,6 +2,7 @@ use super::buffer;
 use super::super::geometry;
 use super::physical_device;
 use super::command;
+use super::super::geometry::palette::{Palette, MeshID};
 
 use std::collections::HashMap;
 use ash::vk::DeviceSize;
@@ -12,6 +13,8 @@ use ash::version::DeviceV1_0;
 
 const MAX_VERTICES: u64 = 10000;
 const MAX_INDICES: u64 = 1000000;
+
+
 
 pub struct MeshLocation
 {
@@ -63,6 +66,24 @@ impl GeometryManager
             transfer_queue_: transfer_queue,
             should_load_: false,
         }
+    }
+
+    pub fn load_palette(& mut self, palette: &Palette)
+    {
+        for (mesh_id, mesh) in palette.meshes_.iter()
+        {
+            self.mesh_locations_.insert(*mesh_id, MeshLocation{
+                vertex_offset_: self.vertices_.len(),
+                index_offset_: self.indices_.len(),
+                vertex_count_: mesh.vertices_.len(),
+                index_count_: mesh.indices_.len(),
+            });
+
+            self.vertices_.extend(mesh.vertices_.iter().cloned());
+            self.indices_.extend(mesh.indices_.iter().cloned());
+        }
+
+        self.should_load_ = true;
     }
 
     pub fn load_mesh(& mut self, mesh: &geometry::mesh::Mesh) -> u64
@@ -131,7 +152,7 @@ impl GeometryManager
 
         let copy_size = std::mem::size_of::<geometry::vertex::Vertex>() * self.vertices_.len();
 
-        self.vertex_staging_buffer_.copy_from_data(self.vertices_.as_ptr() as * const c_void, copy_size, ash::vk::DeviceSize::min_value());
+        self.vertex_staging_buffer_.copy_from_data(self.vertices_.as_ptr() as * const c_void, copy_size as u64, ash::vk::DeviceSize::min_value());
         self.vertex_staging_buffer_.unmap(device);
 
     }
@@ -142,7 +163,7 @@ impl GeometryManager
 
         let copy_size = std::mem::size_of::<u32>() * self.indices_.len();
 
-        self.index_staging_buffer_.copy_from_data(self.indices_.as_ptr() as * const c_void, copy_size, ash::vk::DeviceSize::min_value());
+        self.index_staging_buffer_.copy_from_data(self.indices_.as_ptr() as * const c_void, copy_size as u64, ash::vk::DeviceSize::min_value());
         self.index_staging_buffer_.unmap(device);
     }
 

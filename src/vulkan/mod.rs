@@ -18,6 +18,8 @@ use crate::vulkan::utility::platforms::required_extension_names;
 
 use super::geometry;
 
+use super::geometry::palette::Palette;
+
 mod utility;
 mod physical_device;
 mod logical_device;
@@ -133,10 +135,17 @@ impl Engine
     pub fn update(&mut self)
     {
         self.geometry_manager_.update(&self.logical_device_.device_);
+        /*
         for renderer in self.renderers_.iter_mut()
         {
             unsafe { renderer.draw_frame(&self.logical_device_.device_, &self.geometry_manager_); }
         }
+         */
+    }
+
+    pub fn load_palette(& mut self, palette: &Palette)
+    {
+        self.geometry_manager_.load_palette(palette);
     }
 
     /// Creates a vulkan instance configured with requested extension and validation support
