@@ -14,7 +14,7 @@ impl CommandDispatch{
         let command_pool_create_info = ash::vk::CommandPoolCreateInfo{
             s_type: ash::vk::StructureType::COMMAND_POOL_CREATE_INFO,
             p_next: ptr::null(),
-            flags: ash::vk::CommandPoolCreateFlags::empty(),
+            flags: ash::vk::CommandPoolCreateFlags::RESET_COMMAND_BUFFER,
             queue_family_index: submit_queue_family_index,
         };
 

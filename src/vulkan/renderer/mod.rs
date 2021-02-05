@@ -28,7 +28,7 @@ mod uniform_manager;
 pub mod instance_manager;
 pub mod scene_manager;
 
-const MAX_FRAMES_IN_FLIGHT: u32 = 3;
+const MAX_FRAMES_IN_FLIGHT: u32 = 2;
 const MAX_INSTANCES: u32 = 10;
 const MAX_LIGHTS: u32 = 100;
 
@@ -76,7 +76,7 @@ impl Renderer
 
         let scene_manager = scene_manager::SceneManager::new(instance, device, physical_device, MAX_LIGHTS as u64, swapchain.swapchain_images_.len());
 
-        let uniform_manager = uniform_manager::UniformManager::new(instance, device, physical_device, 100, MAX_FRAMES_IN_FLIGHT as u32, size_of::<Matrix4<f32>>() as u64);
+        let uniform_manager = uniform_manager::UniformManager::new(instance, device, physical_device, MAX_INSTANCES as u64, MAX_FRAMES_IN_FLIGHT as u32, size_of::<Matrix4<f32>>() as u64);
 
         let command_dispatch = command::CommandDispatch::new(device, physical_device.queue_family_indices_.graphics_compute_.unwrap(), swapchain.swapchain_images_.len() as u32);
 
@@ -421,9 +421,9 @@ impl Renderer
         bytes
     }
 
-    fn record_draw_commands_forward(&mut self, device: &ash::Device, geometry_manager: &geometry_manager::GeometryManager, frame_number: u32, frame_data: FrameData)
+    fn record_draw_commands_forward(&mut self, device: &ash::Device, geometry_manager: &geometry_manager::GeometryManager, image_index: u32, frame_data: FrameData)
     {
-        let command_buffer = self.command_dispatch_.command_buffers_[frame_number as usize];
+        let command_buffer = self.command_dispatch_.command_buffers_[image_index as usize];
         let command_buffer_begin_info = ash::vk::CommandBufferBeginInfo{
             s_type: ash::vk::StructureType::COMMAND_BUFFER_BEGIN_INFO,
             p_next: ptr::null(),
@@ -449,7 +449,7 @@ impl Renderer
             s_type: ash::vk::StructureType::RENDER_PASS_BEGIN_INFO,
             p_next: ptr::null(),
             render_pass: self.render_pass_.unwrap().handle_,
-            framebuffer: self.swapchain_.swapchain_framebuffers_[frame_number as usize],
+            framebuffer: self.swapchain_.swapchain_framebuffers_[image_index as usize],
             render_area: ash::vk::Rect2D{
                 offset: ash::vk::Offset2D{x: 0, y: 0},
                 extent: self.swapchain_.swapchain_extent_
