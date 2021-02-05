@@ -28,8 +28,8 @@ mod uniform_manager;
 pub mod instance_manager;
 pub mod scene_manager;
 
-const MAX_FRAMES_IN_FLIGHT: u32 = 2;
-const MAX_INSTANCES: u32 = 100;
+const MAX_FRAMES_IN_FLIGHT: u32 = 3;
+const MAX_INSTANCES: u32 = 10;
 const MAX_LIGHTS: u32 = 100;
 
 pub struct VulkanInstance
@@ -258,7 +258,7 @@ impl Renderer
 
             device.queue_submit(self.present_queue_, &submit_infos, self.in_flight_fences_[self.current_frame_ as usize]);
 
-            self.swapchain_.queue_present(self.present_queue_, image_index, signal_semaphores[0]);
+            self.swapchain_.queue_present(self.present_queue_, image_index, signal_semaphores.as_ptr());
 
             self.current_frame_ = (self.current_frame_ + 1) % MAX_FRAMES_IN_FLIGHT;
         }

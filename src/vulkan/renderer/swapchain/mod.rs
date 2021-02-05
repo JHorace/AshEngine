@@ -148,13 +148,13 @@ impl Swapchain
     }
 
 
-    pub unsafe fn queue_present(&self, queue: ash::vk::Queue, image_index: u32, wait_semaphore: ash::vk::Semaphore)
+    pub unsafe fn queue_present(&self, queue: ash::vk::Queue, image_index: u32, wait_semaphore: * const ash::vk::Semaphore)
     {
         let present_info = ash::vk::PresentInfoKHR{
             s_type: ash::vk::StructureType::PRESENT_INFO_KHR,
             p_next: ptr::null(),
             wait_semaphore_count: 1,
-            p_wait_semaphores: &wait_semaphore,
+            p_wait_semaphores: wait_semaphore,
             swapchain_count: 1,
             p_swapchains: &self.swapchain_handle_,
             p_image_indices: &image_index,
