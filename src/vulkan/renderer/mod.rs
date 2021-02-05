@@ -295,7 +295,7 @@ impl Renderer
 
         for (i, descriptor_buffer_info) in descriptor_buffer_infos.iter().enumerate()
         {
-            descriptor_sets.push(self.descriptor_sets_[(image_index * MAX_INSTANCES) + 1]);
+            descriptor_sets.push(self.descriptor_sets_[(image_index as usize * MAX_INSTANCES as usize) + i]);
             write_descriptor_sets.push(ash::vk::WriteDescriptorSet{
                 s_type: ash::vk::StructureType::WRITE_DESCRIPTOR_SET,
                 p_next: ptr::null(),
