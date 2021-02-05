@@ -14,15 +14,10 @@ impl PipelineLayout{
     pub unsafe fn new(device: &ash::Device, descriptor_set_layout: &ash::vk::DescriptorSetLayout) -> PipelineLayout
     {
         let push_constant_ranges = [ash::vk::PushConstantRange{
-            stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
+            stage_flags: ash::vk::ShaderStageFlags::VERTEX,
             offset: 0,
-            size: std::mem::size_of::<Matrix4<u32>>() as u32,
-        },
-            ash::vk::PushConstantRange{
-                stage_flags: ash::vk::ShaderStageFlags::FRAGMENT,
-                offset: std::mem::size_of::<Matrix4<u32>>() as u32,
-                size: std::mem::size_of::<Matrix4<u32>>() as u32,
-            }];
+            size: std::mem::size_of::<Matrix4<u32>>() as u32 * 2,
+        }];
 
 
         let layout_create_info = ash::vk::PipelineLayoutCreateInfo{
@@ -31,7 +26,7 @@ impl PipelineLayout{
             flags: ash::vk::PipelineLayoutCreateFlags::empty(),
             set_layout_count: 1,
             p_set_layouts: descriptor_set_layout,
-            push_constant_range_count: 2,
+            push_constant_range_count: 1,
             p_push_constant_ranges: push_constant_ranges.as_ptr()
         };
 
