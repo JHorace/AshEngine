@@ -161,7 +161,7 @@ impl Renderer
             s_type: ash::vk::StructureType::DESCRIPTOR_SET_ALLOCATE_INFO,
             p_next: ptr::null(),
             descriptor_pool: self.descriptor_pool_,
-            descriptor_set_count: self.swapchain_.swapchain_images_.len() as u32 * MAX_INSTANCES,
+            descriptor_set_count: MAX_INSTANCES,
             p_set_layouts: layouts.as_ptr()
         };
 
