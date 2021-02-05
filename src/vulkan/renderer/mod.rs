@@ -210,23 +210,6 @@ impl Renderer
 */
     pub fn update(&mut self, device: &ash::Device, geometry_manager: &geometry_manager::GeometryManager)
     {
-        let curr_scene = self.scenes_.pop_front();
-
-        match curr_scene
-        {
-            Some(scene) => {
-
-                let frame_data = FrameData{
-                    vulkan_instances_: self.process_scene(device, &scene),
-                    view_: scene.view_,
-                    projection_: scene.projection_
-                };
-
-                self.record_draw_commands_forward(device, geometry_manager, frame_data);
-            },
-
-            None => {}
-        };
 
 
 
@@ -240,6 +223,24 @@ impl Renderer
             let wait_semaphores = [self.image_available_sempahores_[self.current_frame_ as usize]];
             let wait_stages = [ash::vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT];
             let signal_semaphores = [self.render_finished_semaphores_[self.current_frame_ as usize]];
+
+            let curr_scene = self.scenes_.pop_front();
+
+            match curr_scene
+            {
+                Some(scene) => {
+
+                    let frame_data = FrameData{
+                        vulkan_instances_: self.process_scene(device, &scene),
+                        view_: scene.view_,
+                        projection_: scene.projection_
+                    };
+
+                    self.record_draw_commands_forward(device, geometry_manager, image_index, frame_data);
+                },
+
+                None => {}
+            };
 
             let submit_infos = [ash::vk::SubmitInfo {
                 s_type: ash::vk::StructureType::SUBMIT_INFO,
@@ -420,108 +421,105 @@ impl Renderer
         bytes
     }
 
-    fn record_draw_commands_forward(&mut self, device: &ash::Device, geometry_manager: &geometry_manager::GeometryManager, frame_data: FrameData)
+    fn record_draw_commands_forward(&mut self, device: &ash::Device, geometry_manager: &geometry_manager::GeometryManager, frame_number: u32, frame_data: FrameData)
     {
-        for(i, &command_buffer) in self.command_dispatch_.command_buffers_.iter().enumerate()
-        {
-            let command_buffer_begin_info = ash::vk::CommandBufferBeginInfo{
-                s_type: ash::vk::StructureType::COMMAND_BUFFER_BEGIN_INFO,
-                p_next: ptr::null(),
-                flags: ash::vk::CommandBufferUsageFlags::SIMULTANEOUS_USE,
-                p_inheritance_info: ptr::null()
-            };
+        let command_buffer = self.command_dispatch_.command_buffers_[frame_number as usize];
+        let command_buffer_begin_info = ash::vk::CommandBufferBeginInfo{
+            s_type: ash::vk::StructureType::COMMAND_BUFFER_BEGIN_INFO,
+            p_next: ptr::null(),
+            flags: ash::vk::CommandBufferUsageFlags::SIMULTANEOUS_USE,
+            p_inheritance_info: ptr::null()
+        };
 
-            unsafe { device.begin_command_buffer(command_buffer, &command_buffer_begin_info).expect("could not begin recording command buffer"); }
+        unsafe { device.begin_command_buffer(command_buffer, &command_buffer_begin_info).expect("could not begin recording command buffer"); }
 
-            let clear_values = [
-                ash::vk::ClearValue{
-                    color: ash::vk::ClearColorValue{
-                        float32: [0.0, 0.0, 0.0, 1.0],
-                    }},
-                ash::vk::ClearValue{
-                    depth_stencil: ash::vk::ClearDepthStencilValue{
-                        depth: 1.0,
-                        stencil: 0,
-                    },
-                }];
-
-            let render_pass_begin_info = ash::vk::RenderPassBeginInfo{
-                s_type: ash::vk::StructureType::RENDER_PASS_BEGIN_INFO,
-                p_next: ptr::null(),
-                render_pass: self.render_pass_.unwrap().handle_,
-                framebuffer: self.swapchain_.swapchain_framebuffers_[i],
-                render_area: ash::vk::Rect2D{
-                    offset: ash::vk::Offset2D{x: 0, y: 0},
-                    extent: self.swapchain_.swapchain_extent_
+        let clear_values = [
+            ash::vk::ClearValue{
+                color: ash::vk::ClearColorValue{
+                    float32: [0.0, 0.0, 0.0, 1.0],
+                }},
+            ash::vk::ClearValue{
+                depth_stencil: ash::vk::ClearDepthStencilValue{
+                    depth: 1.0,
+                    stencil: 0,
                 },
-                clear_value_count: clear_values.len() as u32,
-                p_clear_values: clear_values.as_ptr(),
-            };
-            unsafe{
-                device.cmd_begin_render_pass(command_buffer, &render_pass_begin_info, ash::vk::SubpassContents::INLINE);
+            }];
 
-                let mut push_constant_vec = vec![];
+        let render_pass_begin_info = ash::vk::RenderPassBeginInfo{
+            s_type: ash::vk::StructureType::RENDER_PASS_BEGIN_INFO,
+            p_next: ptr::null(),
+            render_pass: self.render_pass_.unwrap().handle_,
+            framebuffer: self.swapchain_.swapchain_framebuffers_[frame_number as usize],
+            render_area: ash::vk::Rect2D{
+                offset: ash::vk::Offset2D{x: 0, y: 0},
+                extent: self.swapchain_.swapchain_extent_
+            },
+            clear_value_count: clear_values.len() as u32,
+            p_clear_values: clear_values.as_ptr(),
+        };
+        unsafe{
+            device.cmd_begin_render_pass(command_buffer, &render_pass_begin_info, ash::vk::SubpassContents::INLINE);
 
-                let mut view_bytes = Renderer::mat4_to_bytes(frame_data.view_);
+            let mut push_constant_vec = vec![];
 
-                let mut projection_bytes = Renderer::mat4_to_bytes(frame_data.projection_);
+            let mut view_bytes = Renderer::mat4_to_bytes(frame_data.view_);
 
-                push_constant_vec.append(& mut view_bytes);
-                push_constant_vec.append(& mut projection_bytes);
+            let mut projection_bytes = Renderer::mat4_to_bytes(frame_data.projection_);
+
+            push_constant_vec.append(& mut view_bytes);
+            push_constant_vec.append(& mut projection_bytes);
 
 
-                let push_constant = 2u32;
+            let push_constant = 2u32;
 
-                let bytes : [u8; 4] = push_constant.to_le_bytes();
+            let bytes : [u8; 4] = push_constant.to_le_bytes();
 
-                device.cmd_push_constants(
+            device.cmd_push_constants(
+                command_buffer,
+                self.pipeline_.unwrap().layout_.layout_handle_,
+                ash::vk::ShaderStageFlags::FRAGMENT,
+                0,
+                push_constant_vec.as_slice()
+                ,
+            );
+
+            device.cmd_bind_pipeline(command_buffer, ash::vk::PipelineBindPoint::GRAPHICS, self.pipeline_.unwrap().pipeline_handle_);
+
+            let vertex_buffers = [geometry_manager.vertex_device_buffer_.buffer_handle_];
+            let offsets = [0_u64];
+
+            device.cmd_bind_vertex_buffers(command_buffer, 0, &vertex_buffers, &offsets);
+
+            device.cmd_bind_index_buffer(command_buffer, geometry_manager.index_device_buffer_.buffer_handle_, 0, ash::vk::IndexType::UINT32);
+
+
+
+            for vulkan_instance in frame_data.vulkan_instances_.iter()
+            {
+                let mesh_location = geometry_manager.get_mesh_location(&vulkan_instance.mesh_id_);
+
+                device.cmd_bind_descriptor_sets(
                     command_buffer,
+                    ash::vk::PipelineBindPoint::GRAPHICS,
                     self.pipeline_.unwrap().layout_.layout_handle_,
-                    ash::vk::ShaderStageFlags::FRAGMENT,
                     0,
-                    push_constant_vec.as_slice()
-                    ,
+                    &[vulkan_instance.descriptor_set_],
+                    &[]
                 );
-
-                device.cmd_bind_pipeline(command_buffer, ash::vk::PipelineBindPoint::GRAPHICS, self.pipeline_.unwrap().pipeline_handle_);
-
-                let vertex_buffers = [geometry_manager.vertex_device_buffer_.buffer_handle_];
-                let offsets = [0_u64];
-
-                device.cmd_bind_vertex_buffers(command_buffer, 0, &vertex_buffers, &offsets);
-
-                device.cmd_bind_index_buffer(command_buffer, geometry_manager.index_device_buffer_.buffer_handle_, 0, ash::vk::IndexType::UINT32);
-
-
-
-                for vulkan_instance in frame_data.vulkan_instances_.iter()
-                {
-                    let mesh_location = geometry_manager.get_mesh_location(&vulkan_instance.mesh_id_);
-
-                    device.cmd_bind_descriptor_sets(
-                        command_buffer,
-                        ash::vk::PipelineBindPoint::GRAPHICS,
-                        self.pipeline_.unwrap().layout_.layout_handle_,
-                        0,
-                        &[vulkan_instance.descriptor_set_],
-                        &[]
-                    );
-                    device.cmd_draw_indexed(
-                        command_buffer,
-                        mesh_location.index_count_ as u32,
-                        1,
-                        mesh_location.index_offset_ as u32,
-                        mesh_location.vertex_offset_ as i32,
-                        0,
-                    );
-                }
-                //device.cmd_bind_descriptor_sets(command_buffer, ash::vk::PipelineBindPoint::GRAPHICS,)
-
-
-                device.cmd_end_render_pass(command_buffer);
-                device.end_command_buffer(command_buffer).expect("Could not end recording command buffer");
+                device.cmd_draw_indexed(
+                    command_buffer,
+                    mesh_location.index_count_ as u32,
+                    1,
+                    mesh_location.index_offset_ as u32,
+                    mesh_location.vertex_offset_ as i32,
+                    0,
+                );
             }
+            //device.cmd_bind_descriptor_sets(command_buffer, ash::vk::PipelineBindPoint::GRAPHICS,)
 
+
+            device.cmd_end_render_pass(command_buffer);
+            device.end_command_buffer(command_buffer).expect("Could not end recording command buffer");
         }
     }
 
