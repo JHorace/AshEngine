@@ -9,11 +9,14 @@ use std::env;
 use shaderc;
 use ash::vk::ShaderStageFlags;
 
+use spirv_reflect::ShaderModule;
+
 pub struct Shader
 {
     pub shader_module_handle_: ash::vk::ShaderModule,
     pub shader_type_: ash::vk::ShaderStageFlags,
     pub function_name_: CString,
+        spirv_: Vec<u8>,
 }
 
 impl Shader
@@ -34,7 +37,7 @@ impl Shader
         };
 
         let shader_module_handle = device.create_shader_module(&shader_module_create_info, None).expect("Could not create shader module");
-        Shader{ shader_module_handle_: shader_module_handle, shader_type_: shader_type, function_name_: CString::new("main").unwrap()}
+        Shader{ shader_module_handle_: shader_module_handle, shader_type_: shader_type, function_name_: CString::new("main").unwrap(), spirv_: bytes }
     }
 
     pub unsafe fn from_glsl(device: &ash::Device, path: &str, shader_type: ash::vk::ShaderStageFlags) -> Shader
@@ -75,6 +78,11 @@ impl Shader
         let file = File::open(path).expect("Could not open shader file");
 
         file.bytes().filter_map(|byte| byte.ok()).collect()
+    }
+
+    pub fn reflect(&self) -> ShaderModule
+    {
+        ShaderModule::load_u8_data(self.spirv_.as_slice()).expect("Could not reflect shader")
     }
 
 }

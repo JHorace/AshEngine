@@ -47,6 +47,8 @@ impl Pipeline
         let vertex_shader = unsafe { shader::Shader::from_glsl(device, vert_path, ash::vk::ShaderStageFlags::VERTEX) };
         let fragment_shader = unsafe { shader::Shader::from_glsl(device, frag_path, ash::vk::ShaderStageFlags::FRAGMENT) };
 
+        Pipeline::shader_reflection_test(vertex_shader);
+
         let shader_stages = [
             vertex_shader.build_pipeline_shader_stage_create_info(),
             fragment_shader.build_pipeline_shader_stage_create_info(),
@@ -79,6 +81,18 @@ impl Pipeline
         let pipeline = unsafe { device.create_graphics_pipelines(ash::vk::PipelineCache::null(), &pipeline_create_info, None) }.expect("Could not create graphics pipeline");
 
         Pipeline{ pipeline_handle_: *pipeline.first().unwrap(), layout_: pipeline_layout }
+
+    }
+
+    pub fn shader_reflection_test(shader: &shader::Shader)
+    {
+        let shader_module = shader.reflect();
+
+        let input_variables = shader_module.enumerate_input_variables(None).unwrap();
+        let output_variables = shader_module.enumerate_output_variables(None).unwrap();
+        let descriptor_sets = shader_module.enumerate_descriptor_sets().unwrap();
+        let bindings = shader_module.enumerate_descriptor_bindings();
+        let push_constants = shader_module.enumerate_push_constant_blocks();
 
     }
 
