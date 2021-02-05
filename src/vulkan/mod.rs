@@ -135,12 +135,12 @@ impl Engine
     pub fn update(&mut self)
     {
         self.geometry_manager_.update(&self.logical_device_.device_);
-        /*
+
         for renderer in self.renderers_.iter_mut()
         {
-            unsafe { renderer.draw_frame(&self.logical_device_.device_, &self.geometry_manager_); }
+            unsafe { renderer.update(&self.logical_device_.device_, &self.geometry_manager_); }
         }
-         */
+
     }
 
     pub fn load_palette(& mut self, palette: &Palette)
