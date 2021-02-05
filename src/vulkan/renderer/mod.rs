@@ -161,7 +161,7 @@ impl Renderer
             s_type: ash::vk::StructureType::DESCRIPTOR_SET_ALLOCATE_INFO,
             p_next: ptr::null(),
             descriptor_pool: self.descriptor_pool_,
-            descriptor_set_count: self.swapchain_.swapchain_images_.len() as u32,
+            descriptor_set_count: self.swapchain_.swapchain_images_.len() as u32 * MAX_INSTANCES,
             p_set_layouts: layouts.as_ptr()
         };
 
@@ -231,7 +231,7 @@ impl Renderer
                 Some(scene) => {
 
                     let frame_data = FrameData{
-                        vulkan_instances_: self.process_scene(device, &scene),
+                        vulkan_instances_: self.process_scene(device, &scene, image_index),
                         view_: scene.view_,
                         projection_: scene.projection_
                     };
@@ -270,14 +270,14 @@ impl Renderer
         self.scenes_.push_back(scene.clone());
     }
 
-    fn process_scene(&mut self, device: &ash::Device, scene: &Scene) -> Vec<VulkanInstance>
+    fn process_scene(&mut self, device: &ash::Device, scene: &Scene, image_index: u32) -> Vec<VulkanInstance>
     {
         let mut vulkan_instances = vec![];
         let instances = scene.get_instances();
 
         let descriptor_buffer_infos = self.uniform_manager_.update_uniforms(self.current_frame_, &instances);
 
-        let descriptor_sets = self.update_descriptor_sets(device, &descriptor_buffer_infos);
+        let descriptor_sets = self.update_descriptor_sets(device, &descriptor_buffer_infos, image_index);
 
         for (i, instance) in instances.iter().enumerate()
         {
@@ -287,7 +287,7 @@ impl Renderer
         vulkan_instances
     }
 
-    fn update_descriptor_sets(&mut self, device: &ash::Device, descriptor_buffer_infos: &Vec<DescriptorBufferInfo>) -> Vec<ash::vk::DescriptorSet>
+    fn update_descriptor_sets(&mut self, device: &ash::Device, descriptor_buffer_infos: &Vec<DescriptorBufferInfo>, image_index: u32) -> Vec<ash::vk::DescriptorSet>
     {
         let mut descriptor_sets = vec![];
 
@@ -295,7 +295,7 @@ impl Renderer
 
         for (i, descriptor_buffer_info) in descriptor_buffer_infos.iter().enumerate()
         {
-            descriptor_sets.push(self.descriptor_sets_[i]);
+            descriptor_sets.push(self.descriptor_sets_[(image_index * MAX_INSTANCES) + 1]);
             write_descriptor_sets.push(ash::vk::WriteDescriptorSet{
                 s_type: ash::vk::StructureType::WRITE_DESCRIPTOR_SET,
                 p_next: ptr::null(),
