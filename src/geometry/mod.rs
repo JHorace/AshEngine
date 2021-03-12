@@ -1,5 +1,5 @@
-pub mod vertex;
-pub mod model;
 pub mod mesh;
-pub mod scene;
+pub mod model;
 pub mod palette;
+pub mod scene;
+pub mod vertex;

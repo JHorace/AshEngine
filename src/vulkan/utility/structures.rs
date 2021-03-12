@@ -1,4 +1,3 @@
-
-pub struct DeviceExtension{
+pub struct DeviceExtension {
     pub names: [&'static str; 1],
 }
